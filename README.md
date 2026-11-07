@@ -100,7 +100,6 @@ SELECT * from accounts; -- lihat isi tabel
 - Setiap data yang ditulis ke database harus valid sesuai dengan semua aturan yang sudah ditetapkan
 - Hal ini mencegah data menjadi tidak konsisten, dan menjamin integritas relasi antar data
 
-
 ## Kode : Invalid Update
 ```sql
 -- CONSISTENCY
@@ -108,6 +107,31 @@ start TRANSACTION; -- memulai transaksi
 
 update accounts set name = null -- tidak bisa karna constraint fieldnya adalah varchar. jadi harus consistent data yang di ubah dengan field atau constraint yang sudah di tetapkan di database. itu adalah prinsip Consistency
 where id = "1";
+
+COMMIT; -- commit transaction fail/success
+
+SELECT * from accounts; -- lihat isi tabel
+```
+
+# Isolation
+## Isolation
+- Transaksi sering dieksekusi secara bersamaan (mis., Beberapa transaksi membaca dan menulis ke tabel pada waktu yang sama). 
+- Isolation memastikan bahwa eksekusi transaksi secara bersamaan meninggalkan database dalam keadaan yang sama yang akan diperoleh jika transaksi dieksekusi secara berurutan. 
+- Isolation adalah tujuan utama kontrol konkurensi; tergantung pada tingkat isolasi yang digunakan, efek dari transaksi yang tidak lengkap mungkin tidak terlihat oleh transaksi lain
+
+## Kode : SQL Transfer
+```sql
+
+-- ISOLATION SQL transfer
+start TRANSACTION; -- memulai transaksi
+
+SELECT * from accounts WHERE name IN ("Rio", "Kowi") for UPDATE; -- locking for isolation akun rio dan kowi
+
+update accounts set balance = balance - 50000 -- kurangi saldo si rio
+where name = "Rio";
+
+update accounts set balance = balance + 50000 -- tambah saldo si kowi
+where name = "Kowi";
 
 COMMIT; -- commit transaction fail/success
 

@@ -48,3 +48,17 @@ COMMIT; -- commit transaction fail/success
 SELECT * from accounts; -- lihat isi tabel
 
 
+-- ISOLATION SQL transfer
+start TRANSACTION; -- memulai transaksi
+
+SELECT * from accounts WHERE name IN ("Rio", "Kowi") for UPDATE; -- locking for isolation akun rio dan kowi
+
+update accounts set balance = balance - 50000 -- kurangi saldo si rio
+where name = "Rio";
+
+update accounts set balance = balance + 50000 -- tambah saldo si kowi
+where name = "Kowi";
+
+COMMIT; -- commit transaction fail/success
+
+SELECT * from accounts; -- lihat isi tabel
