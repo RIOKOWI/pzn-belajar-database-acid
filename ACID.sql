@@ -55,10 +55,27 @@ SELECT * from accounts WHERE name IN ("Rio", "Kowi") for UPDATE; -- locking for 
 
 update accounts set balance = balance - 50000 -- kurangi saldo si rio
 where name = "Rio";
-
+-- use case : rio transfer ke kowi
 update accounts set balance = balance + 50000 -- tambah saldo si kowi
 where name = "Kowi";
 
 COMMIT; -- commit transaction fail/success
 
 SELECT * from accounts; -- lihat isi tabel
+
+-- DURABILITY
+start TRANSACTION; -- memulai transaksi
+
+SELECT * from accounts WHERE name IN ("Rio", "Kowi") for UPDATE; -- locking for isolation akun rio dan kowi
+
+update accounts set balance = balance - 50000 -- kurangi saldo si rio
+where name = "Rio";
+-- use case : rio transfer ke kowi
+-- belum sempat update/transfer saldo ke kowi tiba tiba server down. nah maka seluruh transaction harus di ulang dari awal karena belum di commit juga
+
+update accounts set balance = balance + 50000 -- tambah saldo si kowi
+where name = "Kowi";
+
+SELECT * from accounts; -- lihat isi tabel
+
+COMMIT; -- commit transaction fail/success
