@@ -30,5 +30,68 @@
 - Di materi selanjutnya, kita akan coba praktekan ACID menggunakan database MySQL
 
 
+# Setup Project
+- Gunakan database MySQL
+- Buat database database_acid
+- Buat table accounts dengan kolom :
+    - id varchar(100) primary key,
+    - name varchar(100) not null,
+    - balance bigint not null
+```sql
+drop table accounts;
+
+-- use the db
+use database_acid;
+
+-- membuat tabel accounts
+create Table accounts (
+    id      VARCHAR(100),
+    name    VARCHAR(100),
+    balance BIGINT NOT NULL
+) engine InnoDB;
+
+select * from accounts;
+```
 
 
+# Atomicity
+## Atomicity
+- Setiap statement dalam transaksi (baik itu membaca, menulis, mengubah atau menghapus), diperlakukan sebagai satu kesatuan
+- Jika transaksi berhasil, maka seluruh statement harus berhasil
+- Jika transaksi gagal, maka seluruh statement harus tidak boleh ada yang berhasil, atau digagalkan
+- Properti ini mencegah terjadinya kehilangan atau kerusakan data, misal jika ditengah transaksi terjadi kegagalan aplikasi
+
+## Atomicity di MySQL
+- Implementasi Atomicity di MySQL menggunakan database transaction
+- Setiap operasi di MySQL, selalu menggunakan database transaction, secara default MySQL akan melakukan autocommit setiap kita mengeksekusi statement
+- Kecuali kita lakukan database transaction secara manual
+
+## Kode : Transaksi Sukses
+```sql
+-- ATOMICITY using transaction
+start TRANSACTION; -- mulai transaction
+
+-- masukin data 1
+insert into accounts (id, name, balance)
+values ("1", "Rio", 100000);
+
+-- masukin data 2
+insert into accounts (id, name, balance)
+values ("2", "Kowi", 200000);
+
+COMMIT; -- commit transaction fail/success
+
+SELECT * from accounts; -- lihat isi tabel
+```
+
+## Kode : Transaksi Rollback
+```sql
+start TRANSACTION; -- memulai transaksi
+
+delete from accounts where id = "Rio"; -- delete data Rio tapi belum permanen karna belum di commit
+delete from accounts where id = "Kowi"; -- delete data Kowi tapi belum permanen karna belum di commit
+
+ROLLBACK; -- semua operasi di batalkan
+
+SELECT * from accounts; -- lihat isi tabel
+```

@@ -1,14 +1,37 @@
--- membuat database
-create database database_acid;
+drop table accounts;
 
--- use the db
-use database_acid;
 
--- membuat tabel accounts
-create Table accounts (
+use database_acid; -- use the db
+
+create Table accounts ( -- membuat tabel accounts
     id      VARCHAR(100),
     name    VARCHAR(100),
     balance BIGINT NOT NULL
-)
+) engine InnoDB;
+
+select * from accounts; -- melihat isi tabel
     
 
+-- ATOMICITY using transaction
+start TRANSACTION; -- mulai transaction
+
+-- masukin data 1
+insert into accounts (id, name, balance)
+values ("1", "Rio", 100000);
+
+-- masukin data 2
+insert into accounts (id, name, balance)
+values ("2", "Kowi", 200000);
+
+COMMIT; -- commit transaction fail/success
+
+SELECT * from accounts; -- lihat isi tabel
+
+start TRANSACTION; -- memulai transaksi
+
+delete from accounts where id = "Rio"; -- delete data Rio tapi belum permanen karna belum di commit
+delete from accounts where id = "Kowi"; -- delete data Kowi tapi belum permanen karna belum di commit
+
+ROLLBACK; -- semua operasi di batalkan
+
+SELECT * from accounts; -- lihat isi tabel
