@@ -1,4 +1,6 @@
+
 # Database ACID
+`https://docs.google.com/presentation/d/1li4ucwa1PGjaKSnqiKbJrFaM-EX-5YYYqLWfoKh20HU/edit?slide=id.p#slide=id.p`
 
 # Pengenalan Database ACID
 ## Database ACID
@@ -38,17 +40,13 @@
     - name varchar(100) not null,
     - balance bigint not null
 ```sql
-drop table accounts;
+use database_acid; -- use the db
 
--- use the db
-use database_acid;
-
--- membuat tabel accounts
-create Table accounts (
-    id      VARCHAR(100),
-    name    VARCHAR(100),
-    balance BIGINT NOT NULL
-) engine InnoDB;
+create Table accounts ( -- membuat tabel accounts
+    id      VARCHAR(100) NOT NULL PRIMARY KEY,
+    name    VARCHAR(100) NOT NULL,
+    balance BIGINT       NOT NULL
+) ENGINE InnoDB;
 
 select * from accounts;
 ```
@@ -88,10 +86,30 @@ SELECT * from accounts; -- lihat isi tabel
 ```sql
 start TRANSACTION; -- memulai transaksi
 
-delete from accounts where id = "Rio"; -- delete data Rio tapi belum permanen karna belum di commit
-delete from accounts where id = "Kowi"; -- delete data Kowi tapi belum permanen karna belum di commit
+delete from accounts where id = "1"; -- delete data Rio tapi belum permanen karna belum di commit
+delete from accounts where id = "2"; -- delete data Kowi tapi belum permanen karna belum di commit
 
 ROLLBACK; -- semua operasi di batalkan
+
+SELECT * from accounts; -- lihat isi tabel
+```
+
+# Consistency
+## Consistency
+- Memastikan bahwa transaksi hanya bisa mengubah data dari satu kondisi konsisten ke kondisi konsisten lainnya
+- Setiap data yang ditulis ke database harus valid sesuai dengan semua aturan yang sudah ditetapkan
+- Hal ini mencegah data menjadi tidak konsisten, dan menjamin integritas relasi antar data
+
+
+## Kode : Invalid Update
+```sql
+-- CONSISTENCY
+start TRANSACTION; -- memulai transaksi
+
+update accounts set name = null -- tidak bisa karna constraint fieldnya adalah varchar. jadi harus consistent data yang di ubah dengan field atau constraint yang sudah di tetapkan di database. itu adalah prinsip Consistency
+where id = "1";
+
+COMMIT; -- commit transaction fail/success
 
 SELECT * from accounts; -- lihat isi tabel
 ```
