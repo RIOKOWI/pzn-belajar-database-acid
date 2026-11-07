@@ -1,5 +1,166 @@
-# Welcome to GitHub Desktop!
 
-This is your README. READMEs are where you can communicate what your project is and how to use it.
+# Database ACID
+`https://docs.google.com/presentation/d/1li4ucwa1PGjaKSnqiKbJrFaM-EX-5YYYqLWfoKh20HU/edit?slide=id.p#slide=id.p`
 
-Write your name on line 6, save it, and then head back to GitHub Desktop.
+# Pengenalan Database ACID
+## Database ACID
+- ACID merupakan compliance (kepatuhan) untuk Sistem Basis Data yang memiliki karakter Atomicity, Consistency, Isolation dan Durability
+- ACID adalah sekumpulan properti transaksi basis data yang dimaksudkan untuk menjamin validitas data meskipun ada kesalahan, kegagalan daya, dan kecelakaan lainnya.
+
+## Atomicity
+- Setiap statement dalam transaksi (baik itu membaca, menulis, mengubah atau menghapus), diperlakukan sebagai satu kesatuan
+- Jika transaksi berhasil, maka seluruh statement harus berhasil
+- Jika transaksi gagal, maka seluruh statement harus tidak boleh ada yang berhasil, atau digagalkan
+- Properti ini mencegah terjadinya kehilangan atau kerusakan data, misal jika ditengah transaksi terjadi kegagalan aplikasi
+
+## Consistency
+- Memastikan bahwa transaksi hanya bisa mengubah data dari satu kondisi konsisten ke kondisi konsisten lainnya
+- Setiap data yang ditulis ke database harus valid sesuai dengan semua aturan yang sudah ditetapkan
+- Hal ini mencegah data data menjadi tidak konsisten, dan menjamin integritas relasi antar data
+
+## Isolation
+- Transaksi sering dieksekusi secara bersamaan (mis., Beberapa transaksi membaca dan menulis ke tabel pada waktu yang sama). 
+- Isolation memastikan bahwa eksekusi transaksi secara bersamaan meninggalkan database dalam keadaan yang sama yang akan diperoleh jika transaksi dieksekusi secara berurutan. 
+- Isolation adalah tujuan utama kontrol konkurensi; tergantung pada tingkat isolasi yang digunakan, efek dari transaksi yang tidak lengkap mungkin tidak terlihat oleh transaksi lain
+
+## Durability
+- Durability menjamin bahwa sekali transaksi telah disimpan, itu akan tetap disimpan bahkan dalam kasus kegagalan sistem (misalnya, pemadaman listrik atau crash).
+
+## MySQL ACID
+- MySQL sudah mengikuti kaidah ACID ketika menggunakan engine InnoDB
+- `https://dev.mysql.com/doc/refman/8.0/en/mysql-acid.html`
+- Di materi selanjutnya, kita akan coba praktekan ACID menggunakan database MySQL
+
+
+# Setup Project
+- Gunakan database MySQL
+- Buat database database_acid
+- Buat table accounts dengan kolom :
+    - id varchar(100) primary key,
+    - name varchar(100) not null,
+    - balance bigint not null
+```sql
+use database_acid; -- use the db
+
+create Table accounts ( -- membuat tabel accounts
+    id      VARCHAR(100) NOT NULL PRIMARY KEY,
+    name    VARCHAR(100) NOT NULL,
+    balance BIGINT       NOT NULL
+) ENGINE InnoDB;
+
+select * from accounts;
+```
+
+
+# Atomicity
+## Atomicity
+- Setiap statement dalam transaksi (baik itu membaca, menulis, mengubah atau menghapus), diperlakukan sebagai satu kesatuan
+- Jika transaksi berhasil, maka seluruh statement harus berhasil
+- Jika transaksi gagal, maka seluruh statement harus tidak boleh ada yang berhasil, atau digagalkan
+- Properti ini mencegah terjadinya kehilangan atau kerusakan data, misal jika ditengah transaksi terjadi kegagalan aplikasi
+
+## Atomicity di MySQL
+- Implementasi Atomicity di MySQL menggunakan database transaction
+- Setiap operasi di MySQL, selalu menggunakan database transaction, secara default MySQL akan melakukan autocommit setiap kita mengeksekusi statement
+- Kecuali kita lakukan database transaction secara manual
+
+## Kode : Transaksi Sukses
+```sql
+-- ATOMICITY using transaction
+start TRANSACTION; -- mulai transaction
+
+-- masukin data 1
+insert into accounts (id, name, balance)
+values ("1", "Rio", 100000);
+
+-- masukin data 2
+insert into accounts (id, name, balance)
+values ("2", "Kowi", 200000);
+
+COMMIT; -- commit transaction fail/success
+
+SELECT * from accounts; -- lihat isi tabel
+```
+
+## Kode : Transaksi Rollback
+```sql
+start TRANSACTION; -- memulai transaksi
+
+delete from accounts where id = "1"; -- delete data Rio tapi belum permanen karna belum di commit
+delete from accounts where id = "2"; -- delete data Kowi tapi belum permanen karna belum di commit
+
+ROLLBACK; -- semua operasi di batalkan
+
+SELECT * from accounts; -- lihat isi tabel
+```
+
+# Consistency
+## Consistency
+- Memastikan bahwa transaksi hanya bisa mengubah data dari satu kondisi konsisten ke kondisi konsisten lainnya
+- Setiap data yang ditulis ke database harus valid sesuai dengan semua aturan yang sudah ditetapkan
+- Hal ini mencegah data menjadi tidak konsisten, dan menjamin integritas relasi antar data
+
+## Kode : Invalid Update
+```sql
+-- CONSISTENCY
+start TRANSACTION; -- memulai transaksi
+
+update accounts set name = null -- tidak bisa karna constraint fieldnya adalah varchar. jadi harus consistent data yang di ubah dengan field atau constraint yang sudah di tetapkan di database. itu adalah prinsip Consistency
+where id = "1";
+
+COMMIT; -- commit transaction fail/success
+
+SELECT * from accounts; -- lihat isi tabel
+```
+
+# Isolation
+## Isolation
+- Transaksi sering dieksekusi secara bersamaan (mis., Beberapa transaksi membaca dan menulis ke tabel pada waktu yang sama). 
+- Isolation memastikan bahwa eksekusi transaksi secara bersamaan meninggalkan database dalam keadaan yang sama yang akan diperoleh jika transaksi dieksekusi secara berurutan. 
+- Isolation adalah tujuan utama kontrol konkurensi; tergantung pada tingkat isolasi yang digunakan, efek dari transaksi yang tidak lengkap mungkin tidak terlihat oleh transaksi lain
+
+## Kode : SQL Transfer
+```sql
+
+-- ISOLATION SQL transfer
+start TRANSACTION; -- memulai transaksi
+
+SELECT * from accounts WHERE name IN ("Rio", "Kowi") for UPDATE; -- locking for isolation akun rio dan kowi
+
+update accounts set balance = balance - 50000 -- kurangi saldo si rio
+where name = "Rio";
+
+update accounts set balance = balance + 50000 -- tambah saldo si kowi
+where name = "Kowi";
+
+COMMIT; -- commit transaction fail/success
+
+SELECT * from accounts; -- lihat isi tabel
+```
+
+# Durability
+## Durability
+- Durability menjamin bahwa sekali transaksi telah disimpan, itu akan tetap disimpan bahkan dalam kasus kegagalan sistem (misalnya, pemadaman listrik atau crash).
+
+```sql
+-- DURABILITY
+start TRANSACTION; -- memulai transaksi
+
+SELECT * from accounts WHERE name IN ("Rio", "Kowi") for UPDATE; -- locking for isolation akun rio dan kowi
+
+update accounts set balance = balance - 50000 -- kurangi saldo si rio
+where name = "Rio";
+-- use case : rio transfer ke kowi
+-- belum sempat update/transfer saldo ke kowi tiba tiba server down. nah maka seluruh transaction harus di ulang dari awal karena belum di commit juga
+
+update accounts set balance = balance + 50000 -- tambah saldo si kowi
+where name = "Kowi";
+
+SELECT * from accounts; -- lihat isi tabel
+
+COMMIT; -- commit transaction fail/success
+```
+
+
+contoh di file:
+- [ACID.sql](ACID.sql)
